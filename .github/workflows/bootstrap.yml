@@ -1,10 +1,10 @@
-name: Build Countdown come XAU
+name: Build Countdown XAU Clone
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - "CountdownScuolaPiemonte_AndroidWidget.zip"
+      - "CountdownScuolaPiemonte_AndroidWidget-v6-XAU-CLONE.zip"
       - ".github/workflows/bootstrap.yml"
 
 jobs:
@@ -15,67 +15,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Estrai progetto
-        run: unzip -o CountdownScuolaPiemonte_AndroidWidget.zip
-
-      - name: Configura progetto come XAU
-        shell: bash
-        run: |
-          cat > build.gradle.kts <<'EOF'
-          plugins {
-              id("com.android.application") version "8.7.3" apply false
-          }
-          EOF
-
-          cat > settings.gradle.kts <<'EOF'
-          pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
-          }
-
-          dependencyResolutionManagement {
-              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-
-          rootProject.name = "CountdownScuolaPiemonte"
-          include(":app")
-          EOF
-
-          cat > app/build.gradle.kts <<'EOF'
-          plugins {
-              id("com.android.application")
-          }
-
-          android {
-              namespace = "com.papa.countdownscuola"
-              compileSdk = 35
-
-              defaultConfig {
-                  applicationId = "com.papa.countdownscuola.nuovo"
-                  minSdk = 26
-                  targetSdk = 35
-                  versionCode = 5
-                  versionName = "2.0"
-              }
-
-              compileOptions {
-                  sourceCompatibility = JavaVersion.VERSION_21
-                  targetCompatibility = JavaVersion.VERSION_21
-              }
-
-              buildTypes {
-                  getByName("release") {
-                      isMinifyEnabled = false
-                  }
-              }
-          }
-          EOF
+        run: unzip -o CountdownScuolaPiemonte_AndroidWidget-v6-XAU-CLONE.zip
 
       - name: Java 21
         uses: actions/setup-java@v4
@@ -88,14 +28,14 @@ jobs:
         with:
           gradle-version: "8.10.2"
 
-      - name: Compila come XAU
+      - name: Compila APK
         run: gradle :app:assembleDebug --stacktrace
 
       - name: Rinomina APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk CountdownScuola-v5-XAU-build.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk CountdownScuola-v6-XAU-CLONE.apk
 
       - name: Salva APK
         uses: actions/upload-artifact@v4
         with:
-          name: CountdownScuola-v5-XAU-build
-          path: CountdownScuola-v5-XAU-build.apk
+          name: CountdownScuola-v6-XAU-CLONE
+          path: CountdownScuola-v6-XAU-CLONE.apk
