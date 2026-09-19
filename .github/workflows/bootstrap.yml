@@ -1,4 +1,4 @@
-name: Build Clean Release APK
+name: Build Countdown come XAU
 
 on:
   workflow_dispatch:
@@ -17,9 +17,36 @@ jobs:
       - name: Estrai progetto
         run: unzip -o CountdownScuolaPiemonte_AndroidWidget.zip
 
-      - name: Configura release pulita
+      - name: Configura progetto come XAU
         shell: bash
         run: |
+          cat > build.gradle.kts <<'EOF'
+          plugins {
+              id("com.android.application") version "8.7.3" apply false
+          }
+          EOF
+
+          cat > settings.gradle.kts <<'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+
+          rootProject.name = "CountdownScuolaPiemonte"
+          include(":app")
+          EOF
+
           cat > app/build.gradle.kts <<'EOF'
           plugins {
               id("com.android.application")
@@ -30,16 +57,16 @@ jobs:
               compileSdk = 35
 
               defaultConfig {
-                  applicationId = "com.papa.countdownscuolapiemonte.v4"
+                  applicationId = "com.papa.countdownscuola.nuovo"
                   minSdk = 26
-                  targetSdk = 33
-                  versionCode = 4
-                  versionName = "1.2"
+                  targetSdk = 35
+                  versionCode = 5
+                  versionName = "2.0"
               }
 
               compileOptions {
-                  sourceCompatibility = JavaVersion.VERSION_17
-                  targetCompatibility = JavaVersion.VERSION_17
+                  sourceCompatibility = JavaVersion.VERSION_21
+                  targetCompatibility = JavaVersion.VERSION_21
               }
 
               buildTypes {
@@ -50,75 +77,25 @@ jobs:
           }
           EOF
 
-      - name: Java 17
+      - name: Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
-
-      - name: Installa Android SDK
-        shell: bash
-        run: |
-          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
+          java-version: "21"
 
       - name: Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.9"
+          gradle-version: "8.10.2"
 
-      - name: Compila release NON firmata
-        run: gradle :app:assembleRelease
+      - name: Compila come XAU
+        run: gradle :app:assembleDebug --stacktrace
 
-      - name: Crea chiave nuova
-        shell: bash
-        run: |
-          keytool -genkeypair \
-            -keystore countdown-release.jks \
-            -storepass android \
-            -keypass android \
-            -alias countdown \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -dname "CN=Countdown Scuola,O=PAPA,C=IT"
-
-      - name: Allinea APK
-        shell: bash
-        run: |
-          UNSIGNED=$(find app/build/outputs/apk/release -name "*unsigned.apk" | head -1)
-          echo "APK non firmato: $UNSIGNED"
-          "$ANDROID_HOME/build-tools/35.0.0/zipalign" \
-            -p -f 4 \
-            "$UNSIGNED" \
-            app-aligned.apk
-
-      - name: Firma APK da zero
-        shell: bash
-        run: |
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" sign \
-            --ks countdown-release.jks \
-            --ks-key-alias countdown \
-            --ks-pass pass:android \
-            --key-pass pass:android \
-            --v1-signing-enabled true \
-            --v2-signing-enabled true \
-            --v3-signing-enabled true \
-            --v4-signing-enabled false \
-            --out CountdownScuolaPiemonte-v4-clean.apk \
-            app-aligned.apk
-
-      - name: Verifica APK
-        shell: bash
-        run: |
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify \
-            --verbose \
-            --print-certs \
-            CountdownScuolaPiemonte-v4-clean.apk
+      - name: Rinomina APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk CountdownScuola-v5-XAU-build.apk
 
       - name: Salva APK
         uses: actions/upload-artifact@v4
         with:
-          name: CountdownScuolaPiemonte-v4-clean
-          path: CountdownScuolaPiemonte-v4-clean.apk
+          name: CountdownScuola-v5-XAU-build
+          path: CountdownScuola-v5-XAU-build.apk
